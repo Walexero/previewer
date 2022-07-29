@@ -14,8 +14,13 @@
 </head>
 <body>
    <div class="container">
-        <div class="row">
+        <div class="row" id="formHolder">
             <div class="col-sm-12">
+                {% if messages %} 
+                {% for item in messages %}
+                <p class="alert alert-danger">{{item}}</p>
+                {% endfor %}
+                {% endif %}
                 <form action="" method="post" enctype="multipart/form-data">
                 {% csrf_token %}
                     <div class="form-group" style="display: block;">

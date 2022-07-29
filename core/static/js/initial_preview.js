@@ -1,11 +1,13 @@
+const genConfirmer = document.querySelector('#formHolder')
 const imgUpload = document.querySelector('#fileUpload');
-  const previewer = document.querySelector('#upload_row');
-  const delUpload = document.querySelector('#delUpload');
-  const submit = document.querySelector('#submit');
-  const previewConfirm = document.querySelector('#confirmer');
-  const confirmLabel = document.querySelector('#confirmerLabel');
-  const confirmCont = document.querySelector('#confirm');
-  const hide = document.querySelectorAll('.hidden');
+const previewer = document.querySelector('#upload_row');
+const delUpload = document.querySelector('#delUpload');
+const submit = document.querySelector('#submit');
+const previewConfirm = document.querySelector('#confirmer');
+const confirmLabel = document.querySelector('#confirmerLabel');
+const confirmCont = document.querySelector('#confirm');
+const hide = document.querySelectorAll('.hidden');
+
 
   const preview = {
 
@@ -21,6 +23,10 @@ const imgUpload = document.querySelector('#fileUpload');
       return `
         <button id="previewDelete" class="btn btn-secondary">Delete</button>
         `
+    },
+
+    genConfirmMarkup(){
+
     },
 
     uploadFileRead(file){
@@ -60,6 +66,10 @@ const imgUpload = document.querySelector('#fileUpload');
               const fitter = document.querySelectorAll('img')
               fitter.forEach(value => {
                 value.style.width = '100%';
+                //This frees up memory from using blobs
+                value.onload = (e)=>{
+                  URL.revokeObjectURL(e.src)
+                }
               })
             })
             // For deleting preview image

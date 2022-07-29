@@ -5,3 +5,4 @@ from django.contrib.auth.models import User
 
 class imageUpload(models.Model):
     uploadImg = models.ImageField(default='property_post.jpg', upload_to='images/')
+
