@@ -26,7 +26,12 @@ const hide = document.querySelectorAll('.hidden');
     },
 
     genConfirmMarkup(){
-
+      return `
+        <div class="row" id="confirm">
+            <label class="" id="confirmerLabel">Finished Preview</label>
+            <input type="checkbox" class="" id="confirmer">
+        </div>
+      `
     },
 
     uploadFileRead(file){
@@ -50,39 +55,48 @@ const hide = document.querySelectorAll('.hidden');
         submit.style.display = "none";
         //Image preview code
         let urls = []
-        if (event.target.files) {    
-            src_list = event.target.files
+        if (e.target.files) {    
+            src_list = e.target.files
             //Guard to protect single image render
             if(src_list.length == 1)
               previewer.innerHTML = '';
             if(src_list.length > 0)
               previewer.innerHTML = '';
             const output = Object.keys(src_list).forEach(function(value){
-              
               urls = URL.createObjectURL(src_list[value])
               preview.uploadFileRead(src_list[value])
               hide.forEach(mov => mov.classList.remove('hidden'));
               previewer.insertAdjacentHTML('beforeend', preview.genMarkup(urls, Number(value)))
               const fitter = document.querySelectorAll('img')
               fitter.forEach(value => {
-                value.style.width = '100%';
-                //This frees up memory from using blobs
                 value.onload = (e)=>{
                   URL.revokeObjectURL(e.src)
+                  value.style.width = '100%';
                 }
               })
             })
             // For deleting preview image
             picker = document.querySelectorAll('#uploaded_files');
-
             picker.forEach((img_cont,id) => {
               img_cont.insertAdjacentHTML('beforeend',preview.genDelButton(id))
             });   
             //Deleting the Preview Image
             const preview_deleter = document.querySelectorAll('button');
-            //Rendering Confirm preview checkbox
             preview.previewDelete(preview_deleter);
-            preview.sendDelData();
+
+            // Regenerating Confirm Preview after delete
+            if(confirmCont.innerHTML.trim() == ''){
+              if(previewer.hasChildNodes() == true && document.querySelector('#confirm') == null){
+                genConfirmer.insertAdjacentHTML('afterend', preview.genConfirmMarkup())
+                //Parsing Data before upload after conditional is run
+                const listener =  document.querySelector('#confirmer')
+                const dynamicRemover = document.querySelector('#confirm')
+                preview.sendDelData(listener,dynamicRemover)
+              }
+            }
+            // Parsing Data before upload
+            preview.sendDelData(previewConfirm);
+
           }  
       })
     },
@@ -96,10 +110,13 @@ const hide = document.querySelectorAll('.hidden');
           // delete the preview image selected
           previewer.removeChild(delButton_node)
           //Unhide the 'hidden' classes || hide it
-          if(previewer.children.length > 0)
-            hide.forEach(mov => mov.classList.remove('hidden'));
           if(previewer.children.length == 0)
-            hide.forEach(mov => mov.classList.add('hidden'));
+          // hide.forEach(mov => mov.classList.add('hidden'));
+            hide.forEach(mov => mov.remove())
+
+          if(previewer.children.length > 0){
+            hide.forEach(mov => mov.classList.remove('hidden'));
+          } 
         })
       })
     },
@@ -108,7 +125,7 @@ const hide = document.querySelectorAll('.hidden');
 
     delData : [],
 
-    sendDelData(){
+    sendDelData(previewConfirm,optional){
       previewConfirm.addEventListener('click', () => {
         //Use getDelData to get delete file image name
         preview.getDelData.forEach((del,i) => preview.delData[i] = src_list[del].name);
@@ -116,7 +133,12 @@ const hide = document.querySelectorAll('.hidden');
         submit.style.display = 'block';
         delHide = document.querySelectorAll('#previewDelete')
         delHide.forEach(mov => mov.style.display = 'none');
-        hide.forEach(mov => mov.classList.add('hidden'));
+        //To hide the hardcoded Confirm div
+        hide.forEach(mov => {
+          mov.classList.add('hidden')
+        })
+        //To remove the dynamically generated html code
+        if(optional)optional.remove()
       })
     }
   }
