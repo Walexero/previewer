@@ -21,40 +21,61 @@ def home(request):
       image_sort = request.POST.getlist('filesort')
       adi = []
       
-      # split the images to be deleted name to a list
       if len(image_sort[0]) == 0:
+         # to verify image upload not greater than required size
+         if len(images) == 0:
+            messages.error('Nothing to Upload')
          if len(images) <= image_upload_amount:
-            memory_upload = []
+            size_limit = []
+            img_ext_verify = []
+            # to validate all images before compression
             for x in range(len(images)):
-               img = images[x]
-               # image upload input validator for extension and image size
-               if img.name.split('.')[1] in accept_ext and img.size <= image_size_limit:
-                  im = Image.open(img)
-                  im_io = BytesIO()
-                  if im.mode != 'RGB':
-                     im = im.convert('RGB')
-                  im = im.resize(img_res)
-                  im.save(im_io, format= 'JPEG', optimize=True, quality=50)
-                  memory_upload.append(InMemoryUploadedFile(im_io, None, img.name, 'image/jpeg', im_io.tell(), None ))
-            for items in memory_upload:
-               parser = imageUpload.objects.create(uploadImg = items)
-            parser.save()
-            return redirect('test')
-         else:
+               img =  images[x]
+               if img.size > image_size_limit:
+                  size_limit.append(img)
+               if img.name.split('.')[1] not in accept_ext:
+                  img_ext_verify.append(img)
+            # to compress images if valid
+            if len(size_limit) == 0 and len(img_ext_verify) == 0:
+                memory_upload = []
+                for x in range(len(images)):
+                   img = images[x]
+                   im = Image.open(img)
+                   im_io = BytesIO()
+                   if im.mode != 'RGB':
+                      im = im.convert('RGB')
+                   im = im.resize(img_res)
+                   im.save(im_io, format= 'JPEG', optimize=True, quality=50)
+                   memory_upload.append(InMemoryUploadedFile(im_io, None, img.name, 'image/jpeg', im_io.tell(), None ))
+                for items in memory_upload:
+                   parser = imageUpload.objects.create(uploadImg = items)
+                parser.save()
+                return redirect('test')
+
+            elif len(size_limit) > 0 or len(img_ext_verify) > 0:
+               messages.error(request,f'Only 5mb maximum of images can be Uploaded for each. Image extension must be acceptable and Only a maximum of {image_upload_amount} images can be Uploaded')
+         else: 
             messages.error(request,f'Only 5mb maximum of images can be Uploaded for each. Image extension must be acceptable and Only a maximum of {image_upload_amount} images can be Uploaded')
-         
-                
-      elif len(image_sort[0]) > 1:
+
+      elif len(image_sort[0]) > 0:
          for x in image_sort:
             adi = x.split(",")
          images = [image for image in images if image.name not in adi]
-         # Check if the image is not empty
+          # to verify image upload not greater than required size
          if len(images) == 0:
-            messages.error(request,'Retry Upload')
-         else:
-         # # run if the image amount is not more than 10
-            if len(images) <= image_upload_amount:
-            #    #compress the image before save
+            messages.error('Nothing to Upload')
+         if len(images) <= image_upload_amount:
+            size_limit = []
+            img_ext_verify = []
+            # to validate all images before compression
+            for x in range(len(images)):
+               img =  images[x]
+               if img.size > image_size_limit:
+                  size_limit.append(img)
+               if img.name.split('.')[1] not in accept_ext:
+                  img_ext_verify.append(img)
+            # to compress images if valid
+            if len(size_limit) == 0 and len(img_ext_verify) == 0:
                memory_upload = []
                for x in range(len(images)):
                   img = images[x]
@@ -69,12 +90,14 @@ def home(request):
                   parser = imageUpload.objects.create(uploadImg = items)
                parser.save()
                return redirect('test')
-            else:
+            elif len(size_limit) > 0 or len(img_ext_verify) > 0:
                messages.error(request,f'Only 5mb maximum of images can be Uploaded for each. Image extension must be acceptable and Only a maximum of {image_upload_amount} images can be Uploaded')
-
+         else:
+            messages.error(request,f'Only 5mb maximum of images can be Uploaded for each. Image extension must be acceptable and Only a maximum of {image_upload_amount} images can be Uploaded')
    context = {
    }
    return render(request, 'pic_upload.html',context)
+
 
 def test(request):
    seer = imageUpload.objects.all()
